@@ -184,33 +184,77 @@ so文件Linux系统的共享库，实际上Unity的C#代码也通过il2cpp编译
  - [一个简单的Native样例](https://github.com/Meach/UnitySimpleNativeLibrary)
  - [Android官方样例](https://github.com/android/ndk-samples/tree/master/hello-libs)
 
-## Unity线程和jvm线程问题
+### Unity线程和Android线程问题
 
-1. 主线程与jvm线程
+#### 问题
+开始下面章节之前，先回答一个问题：  
+Unity子线程可以创建 `AndroidJavaClass`吗？
 
-2. 线程安全访问
-3. Jni调用关系
+#### 背景介绍
 
+我们都知道，Android系统是基于Linux系统的，Android系统上的线程也是Linux线程。  
+对于Unity来说，如果创建一个Unity下的线程，这个线程就是标准的Linux线程，这个标准线程和Android线程是有区别的。
+一个Android进程对应一个虚拟机实例，所以所有Android层创建的线程都是运行在Android虚拟机下（对Java虚拟机实现的优化改进版）
+而对于使用C/C++代码运行的线程(`pthread_create()` 和
+`std:thread`)，只是一个标准的Linux线程，必须**绑定虚拟机环境**才能访问java的托管代码。
+
+#### 正确的访问流程
+正确的的过程是：
+1. 创建线程
+2. 调用 `AttachCurrentThread` 绑定`JNIEnv`
+3. 做一些java代码访问
+4. `DetachCurrentThread`
+
+示例：
+```
+      bool isAttached = bsg_unity_isJNIAttached();
+      if (!isAttached) {
+        AndroidJNI.AttachCurrentThread();
+      }
+      using (AndroidJavaObject map = BuildJavaMapDisposable(metadata))
+      {
+        CallNativeVoidMethod("leaveBreadcrumb", "(Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V",
+            new object[]{name, type, map});
+      }
+      if (!isAttached) {
+        AndroidJNI.DetachCurrentThread();
+      }
+```
+>  以上代码
+>  [参考](https://github.com/bugsnag/bugsnag-unity/blob/master/src/BugsnagUnity/Native/Android/NativeInterface.cs)
+>  [Jni线程判断的实现](https://github.com/bugsnag/bugsnag-unity/blob/master/bugsnag-android-unity/src/main/jni/bugsnag_unity.c)
+
+**Unity主线程**
+Mono脚本运行线程，可以认为Android的一个子线程，可以访问java托管代码，但不能更新Android的UI
+
+**Android主线程**  
+可以进行主要UI工作的线程(Android-5.0后, 有RenderThread处理UI渲染工作.
+
+
+参考：
+
+- [JNI官方手册](https://docs.oracle.com/javase/1.5.0/docs/guide/jni/spec/jniTOC.html)
+- [Android架构](https://developer.android.com/guide/platform)
+- [Android Jni 线程说明](https://developer.android.com/training/articles/perf-jni#threads)
 
 ## 集成iOS插件
 
 
 [UnitySendMessage效率测试](https://github.com/5argon/UnitySendMessageEfficiencyTest)
 
-## 常用功能
+## 附录
 
 1. 存储目录 https://blog.csdn.net/xingnan4414/article/details/79388972
-
 内部存储、外部存储
 
 2. 权限获取
 3. 其他接口（震动，屏幕方向等）
 
 
-参考资料
-### 附录链接
+## 扩展链接
 
 
 [Unity Android Plugin开发指南](https://cloud.tencent.com/developer/article/1033592)
 
 [Android反编译工具jadx-支持apk/aar/jar/dex](https://github.com/skylot/jadx)
+[Android只在UI主线程修改UI?](https://www.zhihu.com/question/24764972)
