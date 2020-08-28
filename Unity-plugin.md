@@ -238,23 +238,61 @@ Mono脚本运行线程，可以认为Android的一个子线程，可以访问jav
 - [Android Jni 线程说明](https://developer.android.com/training/articles/perf-jni#threads)
 
 ## 集成iOS插件
+iOS集成较为简单，一个常见的plugin目录如下
+```
++-- Plugins
+|   +-- iOS
+|       +-- YourModuleFolderName          //源码引入
+|           +-- xx.h
+|           +-- xx.mm
+|       +-- YourLibName.framework   // framework库
+```
+
+现在，我们们引入`YourLibName` 的Android,iOS native库，native
+方法`FooPluginFunction`最终的声明如下
+```
+       #if UNITY_IPHONE
+   
+       // On iOS plugins are statically linked into
+       // the executable, so we have to use __Internal as the
+       // library name.
+       [DllImport ("__Internal")]
+
+       #else
+
+       // Other platforms load plugins dynamically, so pass the name
+       // of the plugin's dynamic library.
+       [DllImport ("YourLibName")]
+    
+       #endif
+
+       private static extern float FooPluginFunction ();
+
+```
+
+集成的过程和调用官网介非常详细：
+[官方手册](https://docs.unity3d.com/Manual/PluginsForIOS.html)
 
 
-[UnitySendMessage效率测试](https://github.com/5argon/UnitySendMessageEfficiencyTest)
+[iOS生成Framework库](https://blog.csdn.net/shifang07/article/details/102549906)
+
 
 ## 附录
 
-1. 存储目录 https://blog.csdn.net/xingnan4414/article/details/79388972
-内部存储、外部存储
+### 存储目录
 
-2. 权限获取
-3. 其他接口（震动，屏幕方向等）
+`Application.persistentDataPath`
+- iOS: `/var/mobile/Containers/Data/Application/<guid>/Documents`
+- Android: `/storage/emulated/0/Android/data/<packagename>/files`
+
+Android的目录是放在外部存储，
+如果是私密或者重要的数据建议放在[内部存储](https://developer.android.com/training/data-storage/files/internal?hl=zh-cn#WriteFileInternal)
 
 
-## 扩展链接
-
+### 扩展链接
 
 [Unity Android Plugin开发指南](https://cloud.tencent.com/developer/article/1033592)
-
 [Android反编译工具jadx-支持apk/aar/jar/dex](https://github.com/skylot/jadx)
 [Android只在UI主线程修改UI?](https://www.zhihu.com/question/24764972)
+[Android存储目录](https://blog.csdn.net/xingnan4414/article/details/79388972)
+[iOS UnitySendMessage效率测试](https://github.com/5argon/UnitySendMessageEfficiencyTest)
