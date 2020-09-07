@@ -53,7 +53,8 @@ libs/name.jar      // 依赖的lib文件
 jni/abi_name/name.so (where abi_name is one of the Android supported ABIs)
 proguard.txt       // 混淆目录
 ```
-> Tips : 通过 Android Studio 可以直接查看 aar和apk文件，将该类文件直接拖入即可
+Tips
+> 通过 Android Studio 可以直接查看 aar和apk文件，将该类文件直接拖入即可
 通过上面的简单介绍，我们可以了解到aar文件实际上是资源包类型，可以包括代码和资源配置。
 
 开始介绍具体的集成之前，我们先看一下集成Android插件后的Unity工程是什么样子的:
@@ -80,10 +81,10 @@ proguard.txt       // 混淆目录
 
 备注：
 
-- mainTemplate.gradle 由Unity自动生成，需勾选 `PlayerSettings Android` -
+> mainTemplate.gradle 由Unity自动生成，需勾选 `PlayerSettings Android` -
   `Build` - `Custom Gradle Template`
 
-- proguard-user.txt 由Unity自动生成，需勾选 `PlayerSettings` - `Android` -
+> proguard-user.txt 由Unity自动生成，需勾选 `PlayerSettings` - `Android` -
   `Build` - `User proguard file`
 
 下面的章节我们会介绍关于 jar, aar的集成和打包，还有so文件的构建
@@ -105,8 +106,12 @@ proguard.txt       // 混淆目录
 - aar文件
 - jar文件
 - 源码（java,kotlin代码文件）
-以上四种格式后缀的文件导入到Unity工程后会自动标记为plugin，在响应的Inspctor
-这三种方式如何选择呢？ 前面我们介绍了，aar包含资源，如果要包含资源文件必须使用aar，如果仅仅是代码文件的话三种方式均可以使用。
+
+以上四种格式后缀的文件导入到Unity工程后会自动标记为plugin，打开 `Inspctor` 视图可见：
+
+![](plugin-inspector.png)
+
+这三种方式如何选择呢？ 前面我们介绍了aar格式，如果要包含资源文件必须使用aar，如果仅仅是代码文件的话三种方式均可以使用。
 
 - 包含资源文件必须使用aar。
 - 简单而且功能单一的实现尝试源码，较为方便
